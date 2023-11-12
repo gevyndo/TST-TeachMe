@@ -1,5 +1,5 @@
 {"appointment": [
-	{"studentID":1, "teacherID":2, "tanggal":"1-2-2024"},
-	{"studentID":2, "teacherID":1, "tanggal":"1-2-2024"}
+	{"id":1,"studentID":1, "teacherID":2, "tanggal":"1-2-2024"},
+	{"id":2,"studentID":2, "teacherID":1, "tanggal":"1-2-2024"}
 ]
 }
