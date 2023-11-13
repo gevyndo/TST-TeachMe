@@ -246,8 +246,7 @@ async def get_teacher_appointment_list(user: Teacher = Depends(get_curr_user)):
 		rows=[]
 		for data in data_appointment['appointment']:
 			if data['teacherID'] == studentID:
-				rows.append([data['studentID'],data['teacherID'],data['tanggal']])
-                
+				rows.append([data['studentID'], data['teacherID'], data['tanggal']])              
 		return rows
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
