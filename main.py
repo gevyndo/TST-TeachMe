@@ -1,14 +1,14 @@
-
+import json
 from typing import Annotated
 from fastapi import Depends, Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-import json
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-
+from typing import Union
+import requests
 admin_db={
 	"admin":{
 		"id":-3,
@@ -193,19 +193,48 @@ async def get_appointment(id:int, user: Admin = Depends(get_curr_user)):
 
 
 @app.post('/daftar/student')
-async def daftar_student(nama : str, password : str):
+async def daftar_student(riwayatPenyakit :str,nama : str, password : str):
 	max=0
 	for data in data_student["student"]:
 		if int(data["id"])>max:
 			max=int(data["id"])
 	max+=1
 	password_hashed=get_password_hashed(password)
-	data_student['student'].append({"id":max, "name":nama,"password":password_hashed})
-	data_akun['akun'].append({"akunID":max, "name":nama,"password":password_hashed,"role":"student"})
-	write_data_student(data_student)
-	write_data_akun(data_akun)
+	url = 'tugasghaylan.a9gec8gtbgekdqcz.southeastasia.azurecontainer.io/daftar'
+	headers = {
+		'accept':'application/json',
+		'Content-Type': 'application/x-www-form-urlencoded'
+	}
+	data = {
+		"nama": nama,
+		"riwayatPenyakit":riwayatPenyakit
+	}
+	response = requests.post(url,headers=headers, data=data)
+	if response.status_code==200:
+		print(response)
+		id = 0
+		for karakter in response.text:
+			if karakter.isdigit():
+				id=id*10 + int(karakter)
+		url = 'tugasghaylan.a9gec8gtbgekdqcz.southeastasia.azurecontainer.io/users'
+		headers = {
+			'accept':'application/json',
+			'Content-Type': 'application/x-www-form-urlencoded'
+		}
+		data = {
+			"username": nama,
+			"password":password,
+			"patientId":id
+		}
+		response = requests.post(url,headers=headers, data=data)
+		if response.status_code==200:
+			result=response.json()
+			data_student['student'].append({"id":max, "name":nama,"password":password_hashed,"token": result.get('access_token')})
+			data_akun['akun'].append({"akunID":max, "name":nama,"password":password_hashed,"role":"student"})
+			write_data_student(data_student)
+			write_data_akun(data_akun)
+			return "akun berhasil terbuat"
 	
-	return "akun berhasil terbuat"
 
 @app.put('/edit/teacher')
 async def edit_teacher(teacher:TeacherEdit,user: Admin = Depends(get_curr_user)):
@@ -325,4 +354,34 @@ async def add_teacher(nama:str,password:str,spesialiasi:str,user: Admin = Depend
 		
 		return "akun berhasil terbuat"
 	else:
-		raise HTTPException(status_code=405, detail="unauthorized")	
+		raise HTTPException(status_code=405, detail="unauthorized")
+
+@app.post('/makeappointment')
+async def add_appointment(tekananDarah:int, tinggiBadan:int, beratBadan:int, teacherID:int, tanggal:str,user:Union[Admin, Student] = Depends(get_curr_user) ):
+	if isinstance(user, Admin) or isinstance(user, Student):
+		max=0
+		for data in data_appointment["appointment"]:
+			if int(data["id"])>max:
+				max=int(data["id"])
+		max+=1
+
+
+		if isinstance(user,Student):
+			data_appointment['appointment'].append({"id":max,"studentID":user.studentId,"teacherID":teacherID,"tanggal":tanggal})
+			write_data_appointment(data_appointment)
+		else:
+			data_appointment['appointment'].append({"id":max,"studentID":user.id,"teacherID":teacherID,"tanggal":tanggal})
+			write_data_appointment(data_appointment)
+		return "appointment berhasil dibuat"
+
+@app.get('/rekomendasi')
+async def get_rekomendasi(topik:str,user:Union[Admin, Student] = Depends(get_curr_user) ):
+	if isinstance(user, Admin) or isinstance(user, Student):
+		hasil=[]
+		for data in data_teacher["teacher"]:
+			if topik.lower() == data["spesialisasi"].lower():
+				hasil.append(data)
+		return hasil
+		
+		
+		
