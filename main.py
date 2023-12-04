@@ -61,7 +61,6 @@ json_file='student.json'
 json_file2='teacher.json'
 json_file3='appointment.json'
 json_file4='akun.json'
-
 oauth_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -79,6 +78,7 @@ with open(json_file2,'r') as read:
 
 with open(json_file3,'r') as read:
 	data_appointment=json.load(read)
+
 with open(json_file4,'r') as read:
 	data_akun=json.load(read)
 
@@ -90,9 +90,9 @@ def authenticate_user(username:str,password:str):
 	user_correct=False
 	for data in data_akun["akun"]:
 		if username == data["name"] and verify_password(password,data['password']):
-			user_correct = True
-			user = User(name=data["name"],password=data["password"],id=data["akunID"],role=data["role"])
-			return user
+			user_correct = True 
+			user = User(name=data["name"], password=data["password"], id=data["akunID"], role=data["role"])
+			return user 
 	if not user_correct:
 		raise HTTPException(status_code=401, detail="Invalid Username r Password")
 
@@ -101,33 +101,33 @@ def update_teacher_data(data):
         json.dump(data, file)	
 
 async def get_curr_user(token : str = Depends(oauth_scheme)):
-	payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
-	if payload.get('role') == 'admin':
-		user = Admin(id=-3,name="admin",password="$2b$12$E.Meix7tEEB5yYOWiYNbBO0jHkQNLMrObupNQOSMxC7Ve4y3E2.7i",role="admin")
-		return user
-	elif payload.get('role') == "teacher":
-		try:
-			for data in data_teacher["teacher"]:
-				if payload.get("id") == data["teacherID"]:
-					user = Teacher(name = payload.get("name"), teacherID=payload.get("id"),spesialisasi="game")
-					return user
-		except:
-			raise HTTPException(status_code=401, detail="Invalid Username r Password")
-	elif payload.get('role') == "student":
-		try:
-			for data in data_student["student"]:
-				if payload.get("id") == data["id"]:
-					user = Student(name = payload.get("name"), studentId=payload.get("id"))
-					return user
-		except:
-			raise HTTPException(status_code=401, detail="Invalid Username r Password")
+    payload = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
+    if payload.get('role') == 'admin':
+        user = Admin(id=-3,name="admin",password="$2b$12$E.Meix7tEEB5yYOWiYNbBO0jHkQNLMrObupNQOSMxC7Ve4y3E2.7i",role="admin")
+        return user
+    elif payload.get('role') == "teacher":
+        try:
+            for data in data_teacher["teacher"]:
+                if payload.get("id") == data["teacherID"]:
+                    user = Teacher(name = payload.get("name"), teacherID=payload.get("id"),spesialisasi="game")
+                    return user
+        except:
+            raise HTTPException(status_code=401, detail="Invalid Username r Password")
+    elif payload.get('role') == "student":
+        try:
+            for data in data_student["student"]:
+                if payload.get("id") == data["id"]:
+                    user = Student(name = payload.get("name"), studentId=payload.get("id"))
+                    return user
+        except:
+            raise HTTPException(status_code=401, detail="Invalid Username r Password")
+       
         
-	
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-	user = authenticate_user(form_data.username,form_data.password)
-	token = jwt.encode({'username':user.name,'id':user.id, 'role':user.role}, SECRET_KEY)
-	return {"access_token": token, "token_type":"bearer"}
+    user = authenticate_user(form_data.username, form_data.password)
+    token = jwt.encode({'username':user.name,'id':user.id, 'role':user.role}, SECRET_KEY)
+    return {"access_token": token, "token_type":"bearer"}
 
 @app.get('/all/teacher')
 async def get_all_teacher(user: Student = Depends(get_curr_user)):
@@ -148,7 +148,6 @@ def write_data_teacher(data):
 def write_data_appointment(data):
 	with open(json_file3, "w") as write_file:
 		json.dump(data,write_file)
-
 
 @app.get('/all/akun')
 async def get_all_akun(user: Admin = Depends(get_curr_user)):
@@ -185,12 +184,9 @@ async def get_appointment(id:int, user: Admin = Depends(get_curr_user)):
 		for data in data_appointment['appointment']:
 			if data['id'] == id:
 				return data
-
 		raise HTTPException(status_code=401, detail="id not found")     
-		
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
-
 
 @app.post('/daftar/student')
 async def daftar_student(riwayatPenyakit :str,nama : str, password : str):
