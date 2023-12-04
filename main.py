@@ -283,19 +283,19 @@ async def edit_teacher(teacher:TeacherEdit,user: Admin = Depends(get_curr_user))
 
 @app.put('/edit/student')
 async def edit_student(student:StudentEdit,user: Admin = Depends(get_curr_user)):
-	if isinstance(user, Admin):
-		student_dict=student.dict()
-		item_found = False
-		for student_idx, student_item in enumerate(data_student['student']):
-			if student_item['id'] == student_dict['id']:
-				item_found = True
-				data_student['student'][student_idx]=student_dict
-				
-				with open(json_file,"w") as write_file:
-					json.dump(data_student, write_file)
-				return "Updated"
-	else:
-		raise HTTPException(status_code=405, detail="unauthorized")	
+    if isinstance(user, Admin):
+        student_dict=student.dict()
+        item_found = False
+        for student_idx, student_item in enumerate(data_student['student']):
+            if student_item['id'] == student_dict['id']:
+                item_found = True
+                data_student['student'][student_idx]=student_dict
+               
+                with open(json_file,"w") as write_file:
+                    json.dump(data_student, write_file)
+                return "Updated"
+    else:
+        raise HTTPException(status_code=405, detail="unauthorized")
 
 @app.get('/appointment/teacher')
 async def get_teacher_appointment_list(user: Teacher = Depends(get_curr_user)):
@@ -344,6 +344,7 @@ async def delete_teacher(teacher_id: int,user: Admin = Depends(get_curr_user)):
 		raise HTTPException(
 			status_code=401, detail=f'unauthorized'
 		)
+
 @app.delete('/student/{student_ID}')
 async def delete_teacher(student_ID: int,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
@@ -386,31 +387,50 @@ async def add_teacher(nama:str,password:str,spesialiasi:str,user: Admin = Depend
 		raise HTTPException(status_code=405, detail="unauthorized")
 
 @app.post('/makeappointment')
-async def add_appointment(tekananDarah:int, tinggiBadan:int, beratBadan:int, teacherID:int, tanggal:str,user:Union[Admin, Student] = Depends(get_curr_user) ):
-	if isinstance(user, Admin) or isinstance(user, Student):
-		max=0
-		for data in data_appointment["appointment"]:
-			if int(data["id"])>max:
-				max=int(data["id"])
-		max+=1
+async def add_appointment(teacherID:int, tanggal:str,user:Union[Admin, Student] = Depends(get_curr_user) ):
+    if isinstance(user, Admin) or isinstance(user, Student):
+        max=0
+        for data in data_appointment["appointment"]:
+            if int(data["id"])>max:
+                max=int(data["id"])
+        max+=1
 
-
-		if isinstance(user,Student):
-			data_appointment['appointment'].append({"id":max,"studentID":user.studentId,"teacherID":teacherID,"tanggal":tanggal})
-			write_data_appointment(data_appointment)
-		else:
-			data_appointment['appointment'].append({"id":max,"studentID":user.id,"teacherID":teacherID,"tanggal":tanggal})
-			write_data_appointment(data_appointment)
-		return "appointment berhasil dibuat"
+        if isinstance(user,Student):
+            data_appointment['appointment'].append({"id":max,"studentID":user.studentId,"teacherID":teacherID,"tanggal":tanggal})
+            write_data_appointment(data_appointment)
+        else:
+            data_appointment['appointment'].append({"id":max,"studentID":user.id,"teacherID":teacherID,"tanggal":tanggal})
+            write_data_appointment(data_appointment)
+        return "appointment berhasil dibuat"
 
 @app.get('/rekomendasi')
-async def get_rekomendasi(topik:str,user:Union[Admin, Student] = Depends(get_curr_user) ):
-	if isinstance(user, Admin) or isinstance(user, Student):
-		hasil=[]
-		for data in data_teacher["teacher"]:
-			if topik.lower() == data["spesialisasi"].lower():
-				hasil.append(data)
-		return hasil
+async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
+    if  isinstance(user, Student):
+        nama = ''
+        token = ''
+        for data in data_student['student']:
+            if user.studentId == data["id"]:
+                nama = data['name']
+        for data in data_akun['akun']:
+            if nama == data['name']:
+                token = data['token']
 		
+        hasil=[]
+        for data in data_teacher["teacher"]:
+            if topik.lower() == data["spesialisasi"].lower():
+                hasil.append(data)
+        url = 'http://127.0.0.1:3001/rekomendasi/alat'
+        headers = {
+            'accept': 'application/json',
+            'Authorization': 'bearer ' + token,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        params = {'bidang': topik}
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code==200:
+            result=response.json()
+            return hasil + result
+        else:
+            raise HTTPException(status_code=405, detail=response.text)
 		
 		
