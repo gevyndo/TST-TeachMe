@@ -189,49 +189,82 @@ async def get_appointment(id:int, user: Admin = Depends(get_curr_user)):
 		raise HTTPException(status_code=405, detail="unauthorized")
 
 @app.post('/daftar/student')
-async def daftar_student(riwayatPenyakit :str,nama : str, password : str):
-	max=0
-	for data in data_student["student"]:
-		if int(data["id"])>max:
-			max=int(data["id"])
-	max+=1
-	password_hashed=get_password_hashed(password)
-	url = 'tugasghaylan.a9gec8gtbgekdqcz.southeastasia.azurecontainer.io/daftar'
-	headers = {
-		'accept':'application/json',
-		'Content-Type': 'application/x-www-form-urlencoded'
-	}
-	data = {
-		"nama": nama,
-		"riwayatPenyakit":riwayatPenyakit
-	}
-	response = requests.post(url,headers=headers, data=data)
-	if response.status_code==200:
-		print(response)
-		id = 0
-		for karakter in response.text:
-			if karakter.isdigit():
-				id=id*10 + int(karakter)
-		url = 'tugasghaylan.a9gec8gtbgekdqcz.southeastasia.azurecontainer.io/users'
-		headers = {
-			'accept':'application/json',
-			'Content-Type': 'application/x-www-form-urlencoded'
-		}
-		data = {
-			"username": nama,
-			"password":password,
-			"patientId":id
-		}
-		response = requests.post(url,headers=headers, data=data)
-		if response.status_code==200:
-			result=response.json()
-			data_student['student'].append({"id":max, "name":nama,"password":password_hashed,"token": result.get('access_token')})
-			data_akun['akun'].append({"akunID":max, "name":nama,"password":password_hashed,"role":"student"})
-			write_data_student(data_student)
-			write_data_akun(data_akun)
-			return "akun berhasil terbuat"
-	
+async def daftar_student(nama : str, password : str):
+    for data in data_akun['akun']:
+        if data['name'] == nama:
+            return "username sudah digunakan"
+    max=0
+    for data in data_student["student"]:
+        if int(data["id"])>max:
+            max=int(data["id"])
+    max+=1
+    password_hashed=get_password_hashed(password)
+   
+    data_student['student'].append({"id":max, "name":nama,"password":password_hashed})
+    data_akun['akun'].append({"akunID":max, "name":nama,"password":password_hashed,"role":"student"})
+    write_data_student(data_student)
+    write_data_akun(data_akun)
+    return "akun berhasil terbuat"
 
+@app.post('/daftar/student/integration')
+async def daftar_student(nama : str, password : str):
+    for data in data_akun['akun']:
+        if data['name'] == nama:
+            return "username sudah digunakan"
+    headers = {
+        'accept': 'application/json',
+        'Content-Type': 'application/json'
+    }
+    travis = {
+            "username": nama,
+			"password" : password,
+			"nama" : nama,
+			"alamat" : nama,
+			"email" : nama,
+			"notelp" : nama,
+    }
+    url = 'http://127.0.0.1:3001/register'
+    token=''
+    response = requests.post(url,headers=headers, json=travis)
+    if response.status_code == 200:
+        url = 'http://127.0.0.1:3001/token'
+        headers = {
+            'accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        travis = {
+                'grant_type': '',
+                'username': nama,
+                'password': password,
+                'scope': '',
+                'client_id': '',
+                'client_secret': ''
+        }
+        response = requests.post(url,headers=headers, data=travis)
+        if response.status_code == 200:
+            result = response.json()
+            token = result.get('access_token')
+            
+        else:
+            raise HTTPException(status_code=405, detail=response.text)
+    else:
+        raise HTTPException(status_code=405, detail=response.text)
+        
+
+    max=0
+    for data in data_student["student"]:
+        if int(data["id"])>max:
+            max=int(data["id"])
+    max+=1
+	 
+    password_hashed=get_password_hashed(password)
+   
+    data_student['student'].append({"id":max, "name":nama,"password":password_hashed})
+    data_akun['akun'].append({"akunID":max, "name":nama,"password":password_hashed,"role":"student", "token":token})
+    write_data_student(data_student)
+    write_data_akun(data_akun)
+    return "akun berhasil terbuat"
+	
 @app.put('/edit/teacher')
 async def edit_teacher(teacher:TeacherEdit,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
