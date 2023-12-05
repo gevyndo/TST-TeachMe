@@ -432,8 +432,9 @@ async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
             return hasil + result
         else:
             raise HTTPException(status_code=405, detail=response.text)
-		
-@app.get('/rekomendasi/tutor')
+
+
+@app.get('/rekomendasi/tutor', tags=['Student'])
 async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
     if  isinstance(user, Student):
         
