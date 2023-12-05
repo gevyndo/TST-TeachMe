@@ -192,7 +192,7 @@ async def get_appointment(id:int, user: Admin = Depends(get_curr_user)):
 async def daftar_student(nama : str, password : str):
     for data in data_akun['akun']:
         if data['name'] == nama:
-            return "username sudah digunakan"
+            return "Username already used"
     max=0
     for data in data_student["student"]:
         if int(data["id"])>max:
@@ -204,7 +204,7 @@ async def daftar_student(nama : str, password : str):
     data_akun['akun'].append({"akunID":max, "name":nama,"password":password_hashed,"role":"student"})
     write_data_student(data_student)
     write_data_akun(data_akun)
-    return "akun berhasil terbuat"
+    return "Account successfully created"
 
 @app.post('/daftar/student/integration')
 async def daftar_student(nama : str, password : str):
@@ -263,7 +263,7 @@ async def daftar_student(nama : str, password : str):
     data_akun['akun'].append({"akunID":max, "name":nama,"password":password_hashed,"role":"student", "token":token})
     write_data_student(data_student)
     write_data_akun(data_akun)
-    return "akun berhasil terbuat"
+    return "Account successfully created"
 	
 @app.put('/edit/teacher')
 async def edit_teacher(teacher:TeacherEdit,user: Admin = Depends(get_curr_user)):
@@ -382,7 +382,7 @@ async def add_teacher(nama:str,password:str,spesialiasi:str,user: Admin = Depend
 		write_data_teacher(data_teacher)
 		write_data_akun(data_akun)
 		
-		return "akun berhasil terbuat"
+		return "Teacher account successfully created"
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 
