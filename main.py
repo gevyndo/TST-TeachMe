@@ -149,7 +149,7 @@ def write_data_appointment(data):
 	with open(json_file3, "w") as write_file:
 		json.dump(data,write_file)
 
-@app.get('/all/akun')
+@app.get('/all/akun', tags=['Admin'])
 async def get_all_akun(user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		return data_akun['akun']
@@ -433,4 +433,14 @@ async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
         else:
             raise HTTPException(status_code=405, detail=response.text)
 		
+@app.get('/rekomendasi/tutor')
+async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
+    if  isinstance(user, Student):
+        
+		
+        hasil=[]
+        for data in data_teacher["teacher"]:
+            if topik.lower() == data["spesialisasi"].lower():
+                hasil.append(data)
+        return hasil
 		

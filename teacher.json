@@ -1,1 +1,5 @@
-{"teacher": [{"name": "Pak Bas", "teacherID": 1, "spesialisasi": "Mengajar"}, {"name": "fatih", "teacherID": 2, "spesialisasi": "fisika"}]} 
+{"teacher": [
+	{"id":1, "name":"gunawan", "spesialisasi":"matematika","password":"123"},
+	{"id":2, "name":"gevyndo", "spesialisasi":"fisika","password":"321"}
+]
+}

@@ -1,1 +1,1 @@
-{"appointment": [{"id": 1, "studentID": 1, "teacherID": 2, "tanggal": "1-2-2024"}, {"id": 2, "studentID": 2, "teacherID": 1, "tanggal": "1-2-2024"}, {"id": 3, "studentID": 4, "teacherID": 1, "tanggal": "1-24-2005"}, {"id": 4, "studentID": 4, "teacherID": 1, "tanggal": "1-24-2005"}]}
+{"appointment": [{"id": 1, "studentID": 1, "teacherID": 2, "tanggal": "1-2-2024"}, {"id": 2, "studentID": 2, "teacherID": 1, "tanggal": "1-2-2024"}, {"id": 3, "studentID": 14, "teacherID": 2, "tanggal": "2-12-2003"}]}
