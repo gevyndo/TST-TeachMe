@@ -9,6 +9,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from typing import Union
 import requests
+
 admin_db={
 	"admin":{
 		"id":-3,
@@ -123,13 +124,13 @@ async def get_curr_user(token : str = Depends(oauth_scheme)):
             raise HTTPException(status_code=401, detail="Invalid Username r Password")
        
         
-@app.post("/token")
+@app.post("/token", tags=['User'])
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(form_data.username, form_data.password)
     token = jwt.encode({'username':user.name,'id':user.id, 'role':user.role}, SECRET_KEY)
     return {"access_token": token, "token_type":"bearer"}
 
-@app.get('/all/teacher')
+@app.get('/all/teacher', tags=['Admin'])
 async def get_all_teacher(user: Student = Depends(get_curr_user)):
 	if isinstance(user, Student) or isinstance(user,Admin):
 		return data_teacher["teacher"]
@@ -156,28 +157,28 @@ async def get_all_akun(user: Admin = Depends(get_curr_user)):
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 
-@app.get('/all/teacher')
+@app.get('/all/teacher', tags=['Admin','Student'])
 async def get_all_teacher(user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		return data_teacher['teacher']
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 
-@app.get('/all/appointment')
+@app.get('/all/appointment', tags=['Admin'])
 async def get_all_appointment(user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		return data_appointment['appointment']
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 	
-@app.get('/all/student')
+@app.get('/all/student', tags=['Admin'])
 async def get_all_student(user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		return data_student['student']
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 
-@app.get('/all/appointment/{id}')
+@app.get('/all/appointment/{id}', tags=['Admin'])
 async def get_appointment(id:int, user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		rows=[]
@@ -188,7 +189,7 @@ async def get_appointment(id:int, user: Admin = Depends(get_curr_user)):
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 
-@app.post('/daftar/student')
+@app.post('/daftar/student', tags=['User API Lain'])
 async def daftar_student(nama : str, password : str):
     for data in data_akun['akun']:
         if data['name'] == nama:
@@ -206,7 +207,7 @@ async def daftar_student(nama : str, password : str):
     write_data_akun(data_akun)
     return "Account successfully created"
 
-@app.post('/daftar/student/integration')
+@app.post('/daftar/student/integration', tags=['User'])
 async def daftar_student(nama : str, password : str):
     for data in data_akun['akun']:
         if data['name'] == nama:
@@ -223,11 +224,11 @@ async def daftar_student(nama : str, password : str):
 			"email" : nama,
 			"notelp" : nama,
     }
-    url = 'http://127.0.0.1:3001/register'
+    url = 'http://pabrikskuy.dze3e9ekb7fxh6dz.southeastasia.azurecontainer.io//register'
     token=''
     response = requests.post(url,headers=headers, json=travis)
     if response.status_code == 200:
-        url = 'http://127.0.0.1:3001/token'
+        url = 'http://pabrikskuy.dze3e9ekb7fxh6dz.southeastasia.azurecontainer.io/3001/token'
         headers = {
             'accept': 'application/json',
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -265,7 +266,7 @@ async def daftar_student(nama : str, password : str):
     write_data_akun(data_akun)
     return "Account successfully created"
 	
-@app.put('/edit/teacher')
+@app.put('/edit/teacher', tags=['Admin'])
 async def edit_teacher(teacher:TeacherEdit,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		teacher_dict=teacher.dict()
@@ -281,7 +282,7 @@ async def edit_teacher(teacher:TeacherEdit,user: Admin = Depends(get_curr_user))
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")	
 
-@app.put('/edit/student')
+@app.put('/edit/student', tags=['Admin'])
 async def edit_student(student:StudentEdit,user: Admin = Depends(get_curr_user)):
     if isinstance(user, Admin):
         student_dict=student.dict()
@@ -297,7 +298,7 @@ async def edit_student(student:StudentEdit,user: Admin = Depends(get_curr_user))
     else:
         raise HTTPException(status_code=405, detail="unauthorized")
 
-@app.get('/appointment/teacher')
+@app.get('/appointment/teacher', tags=['Teacher'])
 async def get_teacher_appointment_list(user: Teacher = Depends(get_curr_user)):
 	if isinstance(user, Teacher):
 		studentID=user.teacherID
@@ -309,7 +310,7 @@ async def get_teacher_appointment_list(user: Teacher = Depends(get_curr_user)):
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 	
-@app.get('/appointment/student')
+@app.get('/appointment/student', tags=['Student'])
 async def get_student_appointment_list(user: Student = Depends(get_curr_user)):
 	if isinstance(user, Student):
 		studentID=user.studentId
@@ -322,7 +323,7 @@ async def get_student_appointment_list(user: Student = Depends(get_curr_user)):
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 
-@app.delete('/teacher/{teacher_id}')
+@app.delete('/teacher/{teacher_id}', tags=['Admin'])
 async def delete_teacher(teacher_id: int,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		item_found = False
@@ -345,7 +346,7 @@ async def delete_teacher(teacher_id: int,user: Admin = Depends(get_curr_user)):
 			status_code=401, detail=f'unauthorized'
 		)
 
-@app.delete('/student/{student_ID}')
+@app.delete('/student/{student_ID}', tags=['Admin'])
 async def delete_teacher(student_ID: int,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		item_found = False
@@ -368,7 +369,7 @@ async def delete_teacher(student_ID: int,user: Admin = Depends(get_curr_user)):
 			status_code=401, detail=f'unauthorized'
 		)
 
-@app.post('/add/teacher')
+@app.post('/add/teacher', tags=['Admin'])
 async def add_teacher(nama:str,password:str,spesialiasi:str,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		max=0
@@ -386,7 +387,7 @@ async def add_teacher(nama:str,password:str,spesialiasi:str,user: Admin = Depend
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 
-@app.post('/makeappointment')
+@app.post('/makeappointment', tags=['Student'])
 async def add_appointment(teacherID:int, tanggal:str,user:Union[Admin, Student] = Depends(get_curr_user) ):
     if isinstance(user, Admin) or isinstance(user, Student):
         max=0
@@ -403,7 +404,7 @@ async def add_appointment(teacherID:int, tanggal:str,user:Union[Admin, Student] 
             write_data_appointment(data_appointment)
         return "appointment berhasil dibuat"
 
-@app.get('/rekomendasi')
+@app.get('/rekomendasi', tags=['Student'])
 async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
     if  isinstance(user, Student):
         nama = ''
@@ -419,7 +420,7 @@ async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
         for data in data_teacher["teacher"]:
             if topik.lower() == data["spesialisasi"].lower():
                 hasil.append(data)
-        url = 'http://127.0.0.1:3001/rekomendasi/alat'
+        url = 'http://pabrikskuy.dze3e9ekb7fxh6dz.southeastasia.azurecontainer.io/rekomendasi/alat'
         headers = {
             'accept': 'application/json',
             'Authorization': 'bearer ' + token,
