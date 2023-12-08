@@ -151,7 +151,7 @@ def write_data_appointment(data):
 		json.dump(data,write_file)
 
 @app.get('/all/akun', tags=['Admin'])
-async def get_all_akun(user: Admin = Depends(get_curr_user)):
+async def get_all_account(user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		return data_akun['akun']
 	else:
@@ -179,7 +179,7 @@ async def get_all_student(user: Admin = Depends(get_curr_user)):
 		raise HTTPException(status_code=405, detail="unauthorized")
 
 @app.get('/all/appointment/{id}', tags=['Admin'])
-async def get_appointment(id:int, user: Admin = Depends(get_curr_user)):
+async def get_appointment_from_id(id:int, user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		rows=[]
 		for data in data_appointment['appointment']:
@@ -189,7 +189,7 @@ async def get_appointment(id:int, user: Admin = Depends(get_curr_user)):
 	else:
 		raise HTTPException(status_code=405, detail="unauthorized")
 
-@app.post('/daftar/student', tags=['User API Lain'])
+@app.post('/daftar/student', tags=['User API Lain (untuk teman yang memakai API ini)'])
 async def daftar_student(nama : str, password : str):
     for data in data_akun['akun']:
         if data['name'] == nama:
@@ -224,11 +224,11 @@ async def daftar_student(nama : str, password : str):
 			"email" : nama,
 			"notelp" : nama,
     }
-    url = 'http://pabrikskuy.dze3e9ekb7fxh6dz.southeastasia.azurecontainer.io//register'
+    url = 'http://pabrikskuy.dze3e9ekb7fxh6dz.southeastasia.azurecontainer.io/register'
     token=''
     response = requests.post(url,headers=headers, json=travis)
     if response.status_code == 200:
-        url = 'http://pabrikskuy.dze3e9ekb7fxh6dz.southeastasia.azurecontainer.io/3001/token'
+        url = 'http://pabrikskuy.dze3e9ekb7fxh6dz.southeastasia.azurecontainer.io/token'
         headers = {
             'accept': 'application/json',
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -347,7 +347,7 @@ async def delete_teacher(teacher_id: int,user: Admin = Depends(get_curr_user)):
 		)
 
 @app.delete('/student/{student_ID}', tags=['Admin'])
-async def delete_teacher(student_ID: int,user: Admin = Depends(get_curr_user)):
+async def delete_student(student_ID: int,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		item_found = False
 		for teacher_idx, teacher_item in enumerate(data_student['student']):
@@ -388,7 +388,7 @@ async def add_teacher(nama:str,password:str,spesialiasi:str,user: Admin = Depend
 		raise HTTPException(status_code=405, detail="unauthorized")
 
 @app.post('/makeappointment', tags=['Student'])
-async def add_appointment(teacherID:int, tanggal:str,user:Union[Admin, Student] = Depends(get_curr_user) ):
+async def booking_tutor(teacherID:int, tanggal:str,user:Union[Admin, Student] = Depends(get_curr_user) ):
     if isinstance(user, Admin) or isinstance(user, Student):
         max=0
         for data in data_appointment["appointment"]:
@@ -402,10 +402,10 @@ async def add_appointment(teacherID:int, tanggal:str,user:Union[Admin, Student] 
         else:
             data_appointment['appointment'].append({"id":max,"studentID":user.id,"teacherID":teacherID,"tanggal":tanggal})
             write_data_appointment(data_appointment)
-        return "appointment berhasil dibuat"
+        return "Appointment created"
 
 @app.get('/rekomendasi', tags=['Student'])
-async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
+async def get_tools_recommendation(topik:str,user:Student = Depends(get_curr_user) ):
     if  isinstance(user, Student):
         nama = ''
         token = ''
@@ -436,13 +436,14 @@ async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
 
 
 @app.get('/rekomendasi/tutor', tags=['Student'])
-async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
-    if  isinstance(user, Student):
-        
-		
-        hasil=[]
+async def get_tutor_recommendation(topik: str, user: Student = Depends(get_curr_user)):
+    if isinstance(user, Student):
+        hasil = []
         for data in data_teacher["teacher"]:
             if topik.lower() == data["spesialisasi"].lower():
-                hasil.append(data)
+
+                tutor_info = {"id": data["id"], "name": data["name"], "spesialisasi": data["spesialisasi"]}
+                hasil.append(tutor_info)
         return hasil
 		
+
