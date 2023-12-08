@@ -1,5 +1,1 @@
-{"teacher": [
-	{"id":1, "name":"gunawan", "spesialisasi":"matematika","password":"123"},
-	{"id":2, "name":"gevyndo", "spesialisasi":"fisika","password":"321"}
-]
-}
+{"teacher": [{"name": "albardo", "id": 3, "spesialisasi": "Sismul"}, {"name": "baskara", "id": 4, "spesialiasi": "matematika"}]}

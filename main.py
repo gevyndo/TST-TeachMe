@@ -95,7 +95,7 @@ def authenticate_user(username:str,password:str):
 			user = User(name=data["name"], password=data["password"], id=data["akunID"], role=data["role"])
 			return user 
 	if not user_correct:
-		raise HTTPException(status_code=401, detail="Invalid Username r Password")
+		raise HTTPException(status_code=401, detail="Invalid Username Password")
 
 def update_teacher_data(data):
     with open('teacher.json', 'w') as file:
@@ -109,11 +109,11 @@ async def get_curr_user(token : str = Depends(oauth_scheme)):
     elif payload.get('role') == "teacher":
         try:
             for data in data_teacher["teacher"]:
-                if payload.get("id") == data["teacherID"]:
-                    user = Teacher(name = payload.get("name"), teacherID=payload.get("id"),spesialisasi="game")
+                if payload.get("id") == data["id"]:
+                    user = Teacher(name = payload.get("name"), teacherID=payload.get("id"),spesialisasi="bebas")
                     return user
         except:
-            raise HTTPException(status_code=401, detail="Invalid Username r Password")
+            raise HTTPException(status_code=401, detail="Invalid Username Or Password")
     elif payload.get('role') == "student":
         try:
             for data in data_student["student"]:
@@ -159,10 +159,15 @@ async def get_all_account(user: Admin = Depends(get_curr_user)):
 
 @app.get('/all/teacher', tags=['Admin','Student'])
 async def get_all_teacher(user: Admin = Depends(get_curr_user)):
-	if isinstance(user, Admin):
-		return data_teacher['teacher']
-	else:
-		raise HTTPException(status_code=405, detail="unauthorized")
+    if isinstance(user, Admin):
+        teacher_list = data_teacher['teacher']
+        
+        # Creating a new list with only id, name, and spesialisasi
+        simplified_teacher_list = [{"id": teacher["id"], "nama": teacher["nama"], "spesialisasi": teacher["spesialisasi"]} for teacher in teacher_list]
+
+        return simplified_teacher_list
+    else:
+        raise HTTPException(status_code=405, detail="unauthorized")
 
 @app.get('/all/appointment', tags=['Admin'])
 async def get_all_appointment(user: Admin = Depends(get_curr_user)):
@@ -272,7 +277,7 @@ async def edit_teacher(teacher:TeacherEdit,user: Admin = Depends(get_curr_user))
 		teacher_dict=teacher.dict()
 		item_found = False
 		for teacher_idx, teacher_item in enumerate(data_teacher['teacher']):
-			if teacher_item['teacherID'] == teacher_dict['teacherID']:
+			if teacher_item['id'] == teacher_dict['teacherID']:
 				item_found = True
 				data_teacher['teacher'][teacher_idx]=teacher_dict
 				
@@ -327,14 +332,14 @@ async def get_student_appointment_list(user: Student = Depends(get_curr_user)):
 async def delete_teacher(teacher_id: int,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		item_found = False
-		for teacher_idx, teacher_item in enumerate(data_teacher['teacher']):
-			if teacher_item['teacherID'] == teacher_id:
+		for teacher_idx, data in enumerate (data_teacher['teacher']):
+			if data['id'] == teacher_id:
 				item_found = True
 				data_teacher['teacher'].pop(teacher_idx)
 				
 				with open(json_file2,"w") as write_file:
 					json.dump(data_teacher, write_file)
-				return "Deleted"
+				return "Teacher Account Deleted"
 	
 		if not item_found:
 			return "teacher ID not found."
@@ -374,11 +379,11 @@ async def add_teacher(nama:str,password:str,spesialiasi:str,user: Admin = Depend
 	if isinstance(user, Admin):
 		max=0
 		for data in data_teacher["teacher"]:
-			if int(data["teacherID"])>max:
-				max=int(data["teacherID"])
+			if int(data["id"])>max:
+				max=int(data["id"])
 		max+=1
 		password_hashed=get_password_hashed(password)
-		data_teacher['teacher'].append({"name": nama, "teacherID": max, "spesialiasi": spesialiasi})
+		data_teacher['teacher'].append({"name": nama, "id": max, "spesialiasi": spesialiasi})
 		data_akun['akun'].append({"akunID":max, "name":nama,"password":password_hashed,"role":"teacher"})
 		write_data_teacher(data_teacher)
 		write_data_akun(data_akun)
