@@ -375,7 +375,7 @@ async def delete_student(student_ID: int,user: Admin = Depends(get_curr_user)):
 		)
 
 @app.post('/add/teacher', tags=['Admin'])
-async def add_teacher(nama:str,password:str,spesialiasi:str,user: Admin = Depends(get_curr_user)):
+async def add_teacher(nama:str,password:str,spesialisasi:str,user: Admin = Depends(get_curr_user)):
 	if isinstance(user, Admin):
 		max=0
 		for data in data_teacher["teacher"]:
@@ -440,15 +440,13 @@ async def get_tools_recommendation(topik:str,user:Student = Depends(get_curr_use
             raise HTTPException(status_code=405, detail=response.text)
 
 
-@app.get('/rekomendasi/tutor', tags=['Student'])
-async def get_tutor_recommendation(topik: str, user: Student = Depends(get_curr_user)):
-    if isinstance(user, Student):
-        hasil = []
-        for data in data_teacher["teacher"]:
-            if topik.lower() == data["spesialisasi"].lower():
-
-                tutor_info = {"id": data["id"], "name": data["name"], "spesialisasi": data["spesialisasi"]}
-                hasil.append(tutor_info)
-        return hasil
+@app.get('/rekomendasi/tutor',tags=['Student'])
+async def get_rekomendasi(topik:str,user:Student = Depends(get_curr_user) ):
+    if  isinstance(user, Student):
+        
 		
-
+        hasil=[]
+        for data in data_teacher["teacher"]:
+            if data['spesialisasi']==topik.lower():
+                hasil.append(data)
+        return hasil
